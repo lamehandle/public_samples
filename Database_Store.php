@@ -5,22 +5,21 @@ namespace app;
 use PDO;
 use PDOException;
 
-require_once 'Store.php';
-
 class Database_Store implements Store
 {
-    public    PDO   $connection; // connection
+    private array $instances = [];
+    public    PDO   $connection;
     public string   $host;
     public string   $dbname;
     public string   $port;
     public string   $charset;
     public string   $username;
     public string   $password;
-    public string   $dsn; //data source name
+    public string   $dsn;   //data source name
     public  array   $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, //always throw exceptions
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, //retrieve records as associative arrays
-        PDO::ATTR_EMULATE_PREPARES   => false, //do not use emulate mode
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,        //always throw exceptions
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,   //retrieve records as associative arrays
+        PDO::ATTR_EMULATE_PREPARES   => false,              //do not use emulate mode
         ];
 
 
@@ -37,7 +36,12 @@ class Database_Store implements Store
      }
 
     public static function get_instance($host, $dbname, $port, $charset, $username, $password) : Database_Store    {
-        return new Database_Store($host, $dbname, $port, $charset, $username, $password);
+        if(!isset($instances)) {
+            return  $instances =  new Database_Store($host, $dbname, $port, $charset, $username, $password);
+        }
+        else {
+            return $instances;
+        }
      }
 
     public function connect($dsn = "",$username = "",$password = "",$options = []):PDO {
@@ -94,7 +98,7 @@ class Database_Store implements Store
             }
             echo "items retrieved..." . PHP_EOL;
 
-//            print_r($receipt->line_items);
+//            print_r($receipt->line_items); //test output if needed.
 
             } catch(PDOException $e){
             echo $e->getMessage();
@@ -104,14 +108,12 @@ class Database_Store implements Store
         return $receipt;
     }
 
-    public function update_record(string $sql) : void{ //todo refactor to pass in sql string and be specific.
-
+    public function update_record(string $sql) : void{
         $connection = $this->connect();
         $connection->query( $sql );
-//
     }
 
-    public function delete_record_by_id(string $id){ //seems to work
+    public function delete_record_by_id(string $id){
 
         $sql = "DELETE FROM line_items WHERE  id = :id ";
 
@@ -120,7 +122,5 @@ class Database_Store implements Store
         $statement->execute( [ $id ] );
 
     }
-
-
 
 }
